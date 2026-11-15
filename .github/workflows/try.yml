@@ -1,0 +1,23 @@
+name: claim-oracle-vm
+on:
+  schedule: [{ cron: "*/5 * * * *" }]
+  workflow_dispatch:
+concurrency: claim # never run two attempts at once
+jobs:
+  try:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install oci-cli
+      - run: bash try.sh || echo "no capacity yet"
+        env:
+          OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+          OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+          OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+          OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+          OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+          C: ${{ secrets.C }}
+          AD: ${{ secrets.AD }}
+          SUBNET: ${{ secrets.SUBNET }}
+          IMAGE: ${{ secrets.IMAGE }}
+          SSH_PUB: ${{ secrets.SSH_PUB }}
