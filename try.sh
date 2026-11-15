@@ -2,8 +2,8 @@
 # One run: if an Arm VM exists, stop. If not, try 3 sizes in order (OCPU:GB), and
 # repeat that sequence ROUNDS times, so every size gets ROUNDS real tries.
 # A "slow down" (429) reply does NOT count as a try: we wait, then retry the SAME size.
-# Env: C AD SUBNET IMAGE SSH_PUB. Optional: GAP seconds between tries (60),
-#      ROUNDS (3), BUDGET seconds before we stop politely (1020), MAXBO (6) slow-down waits per try.
+# Env: C AD SUBNET IMAGE SSH_PUB. Optional: GAP seconds between tries (50),
+#      ROUNDS (3), BUDGET seconds before we stop politely (600), MAXBO (4) slow-down waits per try.
 # Writes result=created|exists|retry|fatal|error (plus id=, shape=) to $GITHUB_OUTPUT
 # and a readable report to the run's Summary page ($GITHUB_STEP_SUMMARY).
 #   created/exists = done   retry = no capacity, try next run
@@ -12,10 +12,10 @@ set -u
 OUT=${GITHUB_OUTPUT:-/dev/stdout}
 SUM=${GITHUB_STEP_SUMMARY:-/dev/null}
 NAME=forever-free
-GAP=${GAP:-60}   # Oracle answered 429 when tries were 25s apart, so stay well above that
+GAP=${GAP:-50}   # 429 came when launches were ~25s apart, and not at ~85s; stay near 1 minute
 ROUNDS=${ROUNDS:-3}
-BUDGET=${BUDGET:-1020}
-MAXBO=${MAXBO:-6}
+BUDGET=${BUDGET:-600}
+MAXBO=${MAXBO:-4}
 OCI=${OCI:-oci} # overridable for tests
 SHAPES=(2:12 1:12 1:6) # biggest first; a smaller one is more likely to find room
 MSG=$(mktemp)  # last short message from Oracle (written inside subshells)
@@ -152,7 +152,7 @@ for round in $(seq "$ROUNDS"); do
           if [ "$bo" -ge "$MAXBO" ]; then
             log "🚦 $bo slow-down replies in a row. Giving up on this try, moving on."; break
           fi
-          w=$((GAP * 2 * bo)); [ "$w" -gt 300 ] && w=300; w=$((w + RANDOM % (GAP / 2 + 1)))
+          w=$((GAP * (bo + 1))); [ "$w" -gt 180 ] && w=180; w=$((w + RANDOM % (GAP / 2 + 1)))
           log "🚦 Oracle says slow down ($(cat "$MSG")). Waiting ${w}s, then the SAME size again ($bo/$MAXBO)."
           sleep "$w"; continue ;;
         retry)
