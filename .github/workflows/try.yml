@@ -1,7 +1,7 @@
 name: claim-oracle-vm
 on:
   schedule:
-    - cron: "7,27,47 * * * *" # every 20 min, off the busy :00 mark
+    - cron: "7,27,47 * * * *" # every 20 min (IST :37, :57, :17), off the busy :00 mark
   workflow_dispatch:
 concurrency:
   group: claim # one attempt at a time, so we never double-launch or hammer the API
