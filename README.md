@@ -18,9 +18,9 @@ GitHub reads schedules in **UTC**. India (IST) is UTC + 5:30. So the runs are at
 
 | Every hour at (UTC) | Every hour at (IST) |
 |---|---|
+| :47 | **:17** |
 | :07 | **:37** |
 | :27 | **:57** |
-| :47 | **:17** |
 
 Example in IST: 19:17, 19:37, 19:57, 20:17, 20:37, 20:57, and so on.
 
