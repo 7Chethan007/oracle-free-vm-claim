@@ -13,7 +13,7 @@ permissions:
 jobs:
   try:
     runs-on: ubuntu-latest
-    timeout-minutes: 20 # normal run ~4 min; slower if Oracle rate-limits us
+    timeout-minutes: 25 # script stops itself after ~17 min; this is only a safety net
     steps:
       - uses: actions/checkout@v4
       - name: Install OCI CLI
