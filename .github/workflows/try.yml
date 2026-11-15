@@ -14,6 +14,8 @@ jobs:
   try:
     runs-on: ubuntu-latest
     timeout-minutes: 15 # script stops itself after ~10 min; this is only a safety net
+    outputs:
+      result: ${{ steps.claim.outputs.result }}
     steps:
       - uses: actions/checkout@v4
       - name: Install OCI CLI
@@ -60,3 +62,18 @@ jobs:
       - name: Fail loudly on unknown errors
         if: steps.claim.outputs.result == 'error'
         run: echo "Every attempt hit an error we do not recognise. Read the log above." && exit 1
+  next: # GitHub often skips schedule runs, so each run starts the next one ~20 min after it began
+    needs: try
+    if: ${{ !cancelled() && !contains(fromJSON('["created","exists","fatal","error"]'), needs.try.outputs.result) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Wait, then start the next run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          start=$(gh run view "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --json createdAt --jq .createdAt)
+          wait=$(( $(date -d "$start" +%s) + 1200 - $(date +%s) ))
+          echo "next run in ${wait}s"
+          [ "$wait" -gt 0 ] && sleep "$wait"
+          gh workflow run claim-oracle-vm --repo "$GITHUB_REPOSITORY" --ref main
